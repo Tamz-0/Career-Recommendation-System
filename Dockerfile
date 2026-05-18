@@ -14,6 +14,10 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd pdo pdo_pgsql zip
 
+# Install Node.js (required for Vite/Tailwind build)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -26,12 +30,11 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
+# Install JS dependencies and build frontend assets
+RUN npm install && npm run build
+
 # Set permissions
 RUN chmod -R 777 storage bootstrap/cache
-
-# Build frontend assets
-
-
 
 # Storage link
 RUN php artisan storage:link || true
